@@ -1,6 +1,6 @@
 namespace CraftingInterpreters.Lox;
 
-class Token
+public class Token
 {
     public readonly TokenType type;
     public readonly string lexeme;
