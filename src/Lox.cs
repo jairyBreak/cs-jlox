@@ -8,6 +8,7 @@ public class Lox {
     static bool hadError = false;
     public static void Main(string[] args)
     {
+        /*
         Expr expression = new Expr.Binary(
             new Expr.Unary(
                 new Token(TokenType.MINUS, "-", null, 1),
@@ -17,7 +18,7 @@ public class Lox {
                 new Expr.Literal(45.67)));
 
         Console.WriteLine(new AstPrinter().Print(expression));
-        
+        */
 
         if (args.Length > 1)
         {
@@ -59,10 +60,12 @@ public class Lox {
         var scanner = new Scanner(source);
         List<Token> tokens = scanner.ScanTokens();
 
-        foreach (Token token in tokens)
-        {
-            Console.WriteLine(token);
-        }
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.Parse();
+
+        if (hadError) return;
+
+        Console.WriteLine(new AstPrinter().Print(expression));
     }
 
     public static void Error(int line, string message)
@@ -76,6 +79,15 @@ public class Lox {
         hadError = true;
     }
 
-
+    public static void Error(Token token, string message)
+    {
+        if(token.type == TokenType.EOF){
+            Report(token.line, "at end", message);
+        }
+        else
+        {
+            Report(token.line," at '" + token.lexeme + "'", message);
+        }
+    }
 }
 
