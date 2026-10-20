@@ -2,14 +2,16 @@ using Microsoft.Win32.SafeHandles;
 
 namespace CraftingInterpreters.Lox;
 
-public class Interpreter : Expr.IVisitor<object>
+public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 {
-    public void Interpret(Expr expression)
+    public void Interpret(List<Stmt> statements)
     {
         try
         {
-            object value = Evaluate(expression);
-            Console.WriteLine(Stringify(value));
+            foreach (Stmt statement in statements)
+            {
+                Execute(statement);
+            }
         }
         catch (RuntimeError error)
         {
@@ -30,6 +32,24 @@ public class Interpreter : Expr.IVisitor<object>
     private object Evaluate(Expr expr)
     {
         return expr.Accept(this);
+    }
+
+    private void Execute(Stmt stmt)
+    {
+        stmt.Accept(this);
+    }
+
+    public object? VisitExpressionStmt(Stmt.Expression stmt)
+    {
+        Evaluate(stmt.expression);
+        return null;
+    }
+
+    public object? VisitPrintStmt(Stmt.Print stmt)
+    {
+        object value = Evaluate(stmt.expression);
+        Console.WriteLine(Stringify(value));
+        return null;
     }
 
     public object VisitUnaryExpr(Expr.Unary expr)

@@ -16,6 +16,12 @@ public class GenerateAST
             "Literal  : object? value",
             "Unary    : Token op, Expr right"
         });
+
+        DefineAST(OutputDir, "Stmt", new List<string>
+        {
+            "Expression : Expr expression",
+            "Print      : Expr expression"
+        });
     }
     
     private static void DefineAST(string outputDir, string baseName, List<string> types)

@@ -1,5 +1,6 @@
 namespace CraftingInterpreters.Lox;
 
+using System.Collections;
 using static CraftingInterpreters.Lox.TokenType;
 
 public class Parser
@@ -12,20 +13,39 @@ public class Parser
     {
         this.tokens = tokens;
     }
-    public Expr Parse()
+    public List<Stmt> Parse()
     {
-        try
+        List<Stmt> statements = new List<Stmt>();
+        while (!IsAtEnd())
         {
-            return Expression();
+            statements.Add(Statement());
         }
-        catch (ParseError error)
-        {
-            return null;
-        }
+        return statements;
     }
     private Expr Expression()
     {
         return Equality();
+    }
+
+    private Stmt Statement()
+    {
+        if (Match(PRINT)) return PrintStatement();
+
+        return ExpressionStatement();
+    }
+
+    private Stmt PrintStatement()
+    {
+        Expr value = Expression();
+        Consume(SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+
+    private Stmt ExpressionStatement()
+    {
+        Expr expr = Expression();
+        Consume(SEMICOLON, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
     }
 
     private Expr Equality()
