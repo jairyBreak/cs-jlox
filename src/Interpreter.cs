@@ -40,6 +40,31 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         stmt.Accept(this);
     }
 
+    void ExecuteBlock(List<Stmt> statements, Environ environment)
+    {
+        Environ previous = this.environment;
+        try
+        {
+            this.environment = environment;
+            foreach (Stmt statement in statements)
+            {
+                Execute(statement);
+            }
+        } 
+        finally
+        {
+            this.environment = previous;    
+        }
+    }
+
+    public object? VisitBlockStmt(Stmt.Block stmt)
+    {
+        ExecuteBlock(stmt.statements, new Environ(environment));
+        return null;
+    }
+
+
+
     public object? VisitExpressionStmt(Stmt.Expression stmt)
     {
         Evaluate(stmt.expression);
@@ -63,6 +88,13 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 
         environment.Define(stmt.name.lexeme ,value);
         return null;
+    }
+    
+    public object VisitAssignExpr(Expr.Assign expr)
+    {
+        object value = Evaluate(expr.value);
+        environment.Assign(expr.name, value);
+        return value;
     }
 
     public object VisitUnaryExpr(Expr.Unary expr)

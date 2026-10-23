@@ -33,6 +33,10 @@ class AstPrinter : Expr.IVisitor<string>
     {
         return "";
     }
+    public string VisitAssignExpr(Expr.Assign expr)
+    {
+        return "";
+    }
     private string Parenthesize(string name, params Expr[] exprs)
     {
         StringBuilder builder = new();

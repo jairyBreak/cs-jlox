@@ -1,5 +1,6 @@
 namespace CraftingInterpreters.Lox;
 
+using System.Linq.Expressions;
 using static CraftingInterpreters.Lox.TokenType;
 
 public class Parser
@@ -23,7 +24,7 @@ public class Parser
     }
     private Expr Expression()
     {
-        return Equality();
+        return Assignment();
     }
 
     private Stmt Declaration()
@@ -44,7 +45,7 @@ public class Parser
     private Stmt Statement()
     {
         if (Match(PRINT)) return PrintStatement();
-
+        if (Match(LEFT_BRACE)) return new Stmt.Block(Block());
         return ExpressionStatement();
     }
 
@@ -75,6 +76,40 @@ public class Parser
         Expr expr = Expression();
         Consume(SEMICOLON, "Expect ';' after expression.");
         return new Stmt.Expression(expr);
+    }
+
+    private List<Stmt> Block()
+    {
+        List<Stmt> statements = new List<Stmt>();
+
+        while (!Check(RIGHT_BRACE) && !IsAtEnd())
+        {
+            statements.Add(Declaration());
+        }
+
+        Consume(RIGHT_BRACE, "Expect '}' after block.");
+        return statements;
+    }
+
+    private Expr Assignment()
+    {
+        Expr expr = Equality();
+
+        if (Match(EQUAL))
+        {
+            Token equal = Previous();
+            Expr value = Assignment();
+
+            if(expr is Expr.Variable)
+            {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name,value);
+            }
+
+            Error(equal,"Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     private Expr Equality()
