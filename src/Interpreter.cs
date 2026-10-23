@@ -4,6 +4,7 @@ namespace CraftingInterpreters.Lox;
 
 public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
 {
+    private Environ environment = new Environ();
     public void Interpret(List<Stmt> statements)
     {
         try
@@ -52,6 +53,18 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         return null;
     }
 
+    public object? VisitVarStmt(Stmt.Var stmt)
+    {
+        object? value = null;
+        if(stmt.initializer != null)
+        {
+            value = Evaluate(stmt.initializer);
+        }
+
+        environment.Define(stmt.name.lexeme ,value);
+        return null;
+    }
+
     public object VisitUnaryExpr(Expr.Unary expr)
     {
         object right = Evaluate(expr.right);
@@ -66,6 +79,11 @@ public class Interpreter : Expr.IVisitor<object>, Stmt.IVisitor<object?>
         }
 
         return null;
+    }
+
+    public object VisitVariableExpr(Expr.Variable expr)
+    {
+        return environment.Get(expr.name);
     }
 
     private void CheckNumberOperand(Token op, object operand)

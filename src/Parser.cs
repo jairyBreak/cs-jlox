@@ -1,6 +1,5 @@
 namespace CraftingInterpreters.Lox;
 
-using System.Collections;
 using static CraftingInterpreters.Lox.TokenType;
 
 public class Parser
@@ -18,13 +17,28 @@ public class Parser
         List<Stmt> statements = new List<Stmt>();
         while (!IsAtEnd())
         {
-            statements.Add(Statement());
+            statements.Add(Declaration());
         }
         return statements;
     }
     private Expr Expression()
     {
         return Equality();
+    }
+
+    private Stmt Declaration()
+    {
+        try
+        {
+            if(Match(VAR)) return VarDeclaration();
+
+            return Statement();
+        }
+        catch (ParseError error)
+        {
+            Synchronize();
+            return null;
+        }
     }
 
     private Stmt Statement()
@@ -39,6 +53,21 @@ public class Parser
         Expr value = Expression();
         Consume(SEMICOLON, "Expect ';' after value.");
         return new Stmt.Print(value);
+    }
+
+    private Stmt VarDeclaration()
+    {
+        Token name = Consume(IDENTIFIER, "Expect variable name.");
+
+        Expr initializer = null;
+
+        if (Match(EQUAL))
+        {
+            initializer = Expression();
+        }
+
+        Consume(SEMICOLON, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
     }
 
     private Stmt ExpressionStatement()
@@ -123,6 +152,11 @@ public class Parser
         if(Match(NUMBER, STRING))
         {
             return new Expr.Literal(Previous().literal);
+        }
+
+        if (Match(IDENTIFIER))
+        {
+            return new Expr.Variable(Previous());
         }
 
         if (Match(LEFT_PAREN))
